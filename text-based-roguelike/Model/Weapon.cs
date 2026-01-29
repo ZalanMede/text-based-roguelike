@@ -10,9 +10,9 @@ namespace text_based_roguelike.Model
     {
         private int id {  get; set; }
         private string name { get; set; }
-        private string atk { get; set; }
+        private int atk { get; set; }
 
-        public Weapon(int id, string name, string atk)
+        public Weapon(int id, string name, int atk)
         {
             Id = id;
             Name = name;
@@ -21,6 +21,6 @@ namespace text_based_roguelike.Model
 
         public int Id {  get; set; }
         public string Name { get; set; }
-        public string Atk { get; set; }
+        public int Atk { get; set; }
     }
 }

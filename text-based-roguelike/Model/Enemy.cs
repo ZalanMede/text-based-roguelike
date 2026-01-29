@@ -35,5 +35,15 @@ namespace text_based_roguelike.Model
             Rarity = rarity;
             LootPool = lootPool;
         }
+
+        public Enemy(int id, string name, int hp, int atk, int spd, int rarity)
+        {
+            Id = id;
+            Name = name;
+            Hp = hp;
+            Atk = atk;
+            Spd = spd;
+            Rarity = rarity;
+        }
     }
 }
