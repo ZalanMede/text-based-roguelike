@@ -33,7 +33,7 @@ namespace text_based_roguelike.Model
 
         public override string ToString()
         {
-            return ($"{Name} - ATK: {Atk}\n - HP: {Hp}\n - SPD: {Spd}");
+            return ($"\n{Name} \t- ATK: {Atk}\n\t - HP: {Hp}\n\t - SPD: {Spd}");
         }
     }
 }
