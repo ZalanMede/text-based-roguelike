@@ -24,12 +24,12 @@ namespace text_based_roguelike.Model
             Items = items;
         }
 
-        private int id { get; set; }
-        private string name { get; set; }
-        private int hp { get; set; }
-        private int atk { get; set; }
-        private int spd { get; set; }
-        private List<Item> items { get; set; }
+        private int _id { get; set; }
+        private string _name { get; set; }
+        private int _hp { get; set; }
+        private int _atk { get; set; }
+        private int _spd { get; set; }
+        private List<Item> _items { get; set; }
 
         public override string ToString()
         {

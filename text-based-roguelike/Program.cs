@@ -18,7 +18,10 @@ internal class Program
     private static List<Character> allCharacterListImported = new List<Character>();
     private static List<Enemy> allEnemiesListImported = new List<Enemy>();
     private static List<Weapon> allWeaponsListImported = new List<Weapon>();
-    private static int[] potionStatIncreases = new int[3] { 0, 0, 0};
+    private static List<Item> allItemsListImported = new List<Item>();
+    private static List<LootPool> allEnemyLootPoolListImported = new List<LootPool>();
+    private static int[] potionStatIncreases = [ 0, 0, 0 ];
+    private static bool difficultyFlipFlop = false;
     private static void Main(string[] args)
     {
         ReadFromDatabase();
@@ -32,7 +35,7 @@ internal class Program
 
         DataTable CharactersDBT = DatabaseServices.GetAllData("characters", connectionString);
         DataTable EnemiesDBT = DatabaseServices.GetAllData("enemies", connectionString);
-        DataTable ItemsDBT = DatabaseServices.GetAllData("characteritems", connectionString);
+        DataTable ItemsDBT = DatabaseServices.GetAllData("items", connectionString);
         DataTable EnemyLootPoolDBT = DatabaseServices.GetAllData("enemylootpool", connectionString);
         DataTable WeaponsDBT = DatabaseServices.GetAllData("weapons", connectionString);
 
@@ -46,6 +49,18 @@ internal class Program
         {
             Enemy tempChar = new Enemy(r.Field<int>("id"), r.Field<string>("name"), r.Field<int>("hp"), r.Field<int>("atk"), r.Field<int>("spd"), r.Field<int>("rarity"));
             allEnemiesListImported.Add(tempChar);
+        }
+
+        foreach (DataRow r in ItemsDBT.Rows)
+        {
+            Item tempChar = new Item(r.Field<int>("id"), r.Field<string>("name"), r.Field<string>("stat"), r.Field<int>("inc"));
+            allItemsListImported.Add(tempChar);
+        }
+
+        foreach (DataRow r in EnemyLootPoolDBT.Rows)
+        {
+            LootPool tempLootPool = new LootPool(r.Field<int>("id"), r.Field<int>("enemy_rarity"), r.Field<int>("item_and_weapon_id"), r.Field<int>("drop_chance"));
+            allEnemyLootPoolListImported.Add(tempLootPool);
         }
 
         foreach (DataRow r in WeaponsDBT.Rows)
@@ -94,11 +109,9 @@ internal class Program
 
     private static void EncounterEnemyRoll()
     {
-        //Enemy[] currentDifficultyEnemies = allEnemiesListImported.FindAll(x => x.Rarity == currentDifficulty).ToArray();
-        //Random rnd = new Random();
-        //currentEnemy = allEnemiesListImported[rnd.Next(0, currentDifficultyEnemies.Length - 1)];
-
-        Enemy tempEnemyForCloning = allEnemiesListImported[0];
+        List<Enemy> currentDifficultyEnemies = allEnemiesListImported.FindAll(x => x.Rarity == currentDifficulty).ToList();
+        Random rnd = new Random();
+        Enemy tempEnemyForCloning = currentDifficultyEnemies[rnd.Next(0, currentDifficultyEnemies.Count - 1)];
         currentEnemy = new Enemy(tempEnemyForCloning.Id, tempEnemyForCloning.Name, tempEnemyForCloning.Hp, tempEnemyForCloning.Atk, tempEnemyForCloning.Spd, tempEnemyForCloning.Rarity);
 
         playerCharacter.Atk -= potionStatIncreases[1];
@@ -115,6 +128,7 @@ internal class Program
             usedItem = false;
         }
 
+        Console.WriteLine($"Current difficulty: {currentDifficulty}");
         Console.WriteLine($"A {currentEnemy.Name} appeared!");
         Console.WriteLine("");
         EnemyEncounter();
@@ -123,7 +137,7 @@ internal class Program
     private static void RstConsole()
     {
         Console.Clear();
-        Console.WriteLine($"{playerCharacter.Name} || HP: {playerCharacter.Hp}/{allCharacterListImported[originalPlayerIndex].Hp} || ATK:{playerCharacter.Atk} || SPD:{playerCharacter.Atk}");
+        Console.WriteLine($"{playerCharacter.Name} || HP: {playerCharacter.Hp}/{allCharacterListImported[originalPlayerIndex].Hp} || ATK:{playerCharacter.Atk} || SPD:{playerCharacter.Spd}");
         Console.WriteLine("  ");
     }
 
@@ -174,14 +188,81 @@ internal class Program
 
     private static void RollEnemyLootPool()
     {
+        if (currentDifficulty > 5)
+        {
+            Console.WriteLine("-------------------------");
+            Console.WriteLine("");
+            Console.WriteLine("\tYOU WIN!!!!");
+            Console.WriteLine("");
+            Console.WriteLine("-------------------------");
+            WaitForInput();
+            Environment.Exit(0);
+        }
+
         Console.WriteLine(" ---- ");
         Console.WriteLine($"You search the {currentEnemy.Name}'s corpse for loot...");
-        Console.WriteLine($"You get a Potion of Strength!");
-        playerCharacter.Items.Add(new Item(1, "Potion of Strength", "Atk", 5));
+
+        // Lootpool roll
+        int gottenItemId = RollForItemId();
+        if (gottenItemId != 0)
+        {
+            if (gottenItemId < 100)
+            {
+                Item gottenItem = allItemsListImported.Find(x => x.Id == gottenItemId);
+                playerCharacter.Items.Add(gottenItem);
+                playerCharacter.Items.Sort((x, y) => x.Id.CompareTo(y.Id));
+                Console.WriteLine($"You found a {gottenItem.Name}!");
+            }
+            else
+            {
+                Weapon gottenWeapon = allWeaponsListImported.Find(x => x.Id == gottenItemId);
+                playerCharacter.Atk += gottenWeapon.Atk;
+                Console.WriteLine($"You found a {gottenWeapon.Name} and equip it, increasing your ATK by {gottenWeapon.Atk}!");
+            }
+        }
+        else
+        {
+            Console.WriteLine("You found nothing...");
+        }
+
         WaitForInput();
         RstConsole();
-        currentDifficulty++;
+
+        // Increase difficulty every 2 encounters
+        if (!difficultyFlipFlop)
+        {
+            difficultyFlipFlop = true;
+        }
+        else
+        {
+            currentDifficulty++;
+            difficultyFlipFlop = false;
+        }
+
         EncounterEnemyRoll();
+    }
+
+    private static int RollForItemId()
+    {
+        List<LootPool> currentEnemyLootPool = allEnemyLootPoolListImported.FindAll(x => x.Rarity == currentEnemy.Rarity);
+        Random rnd = new Random();
+        int poolSize = 0;
+        foreach (var item in currentEnemyLootPool)
+        {
+            poolSize += item.DropChance;
+        }
+        int poolRoll = rnd.Next(0, poolSize);
+
+        int rollingThroughPool = 0;
+        foreach (var item in currentEnemyLootPool)
+        {
+            rollingThroughPool += item.DropChance;
+            if (poolRoll <= rollingThroughPool)
+            {
+                return item.ItemOrWeaponId;
+            }
+        }
+        return 0;
     }
 
     private static void EnemyTurn()
@@ -222,6 +303,17 @@ internal class Program
             Console.WriteLine($"You take {damage} damage!");
         }
 
+        if(playerCharacter.Hp <= 0)
+        {
+            Console.WriteLine("-------------------------");
+            Console.WriteLine("");
+            Console.WriteLine("\tYOU DIED!");
+            Console.WriteLine("");
+            Console.WriteLine("-------------------------");
+            WaitForInput();
+            Environment.Exit(0);
+        }
+
         WaitForInput();
         RstConsole();
         EnemyEncounter();
@@ -254,7 +346,7 @@ internal class Program
                 {
                     foreach (var item in playerCharacter.Items)
                     {
-                        Console.WriteLine($"\t{item.Name} - {item} - {item.Stat} - {item.ValueIncrease}");
+                        Console.WriteLine($"\t{item.Name}");
                     }
                     Console.WriteLine("");
                 }
@@ -272,20 +364,20 @@ internal class Program
                 usedItem = true;
                 switch (chosenItem.Stat)
                 {
-                    case "Hp":
+                    case "hp":
                         playerCharacter.Hp += chosenItem.ValueIncrease;
                         Console.WriteLine($"You used {chosenItem.Name} and restored {chosenItem.ValueIncrease} HP!");
                         potionStatIncreases[0] += chosenItem.ValueIncrease;
                         break;
-                    case "Atk":
+                    case "atk":
                         playerCharacter.Atk += chosenItem.ValueIncrease;
                         Console.WriteLine($"You used {chosenItem.Name} and increased your ATK by {chosenItem.ValueIncrease}!");
                         potionStatIncreases[1] += chosenItem.ValueIncrease;
                         break;
-                    case "Spd":
+                    case "spd":
                         playerCharacter.Spd += chosenItem.ValueIncrease;
                         Console.WriteLine($"You used {chosenItem.Name} and increased your SPD by {chosenItem.ValueIncrease}!");
-                        potionStatIncreases[3] += chosenItem.ValueIncrease;
+                        potionStatIncreases[2] += chosenItem.ValueIncrease;
                         break;
                     default:
                         throw (new Exception("No Such Stat"));
@@ -300,10 +392,11 @@ internal class Program
                 RstConsole();
                 EnemyTurn();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 RstConsole();
                 Console.WriteLine("Incorrect input!");
+                Console.WriteLine(ex);
             }
         }
     }

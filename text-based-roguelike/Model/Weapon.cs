@@ -8,9 +8,9 @@ namespace text_based_roguelike.Model
 {
     internal class Weapon
     {
-        private int id {  get; set; }
-        private string name { get; set; }
-        private int atk { get; set; }
+        private int _id {  get; set; }
+        private string _name { get; set; }
+        private int _atk { get; set; }
 
         public Weapon(int id, string name, int atk)
         {

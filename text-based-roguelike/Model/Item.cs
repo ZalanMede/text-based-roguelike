@@ -13,10 +13,10 @@ namespace text_based_roguelike.Model
         public string Stat { get; set; }
         public int ValueIncrease { get; set; }
 
-        private int id { get; set; }
-        private string name { get; set; }
-        private string stat { get; set; }
-        private int valueIncrease { get; set; }
+        private int _id { get; set; }
+        private string _name { get; set; }
+        private string _stat { get; set; }
+        private int _valueIncrease { get; set; }
 
         public Item(int id, string name, string stat, int valueIncrease)
         {
