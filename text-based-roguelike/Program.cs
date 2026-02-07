@@ -14,6 +14,7 @@ internal class Program
     private static int currentDifficulty = 1;
     private static bool inBlock;
     private static bool usedItem;
+    private static bool needSpeedResetFromBlock = false;
     private static Enemy currentEnemy;
     private static List<Character> allCharacterListImported = new List<Character>();
     private static List<Enemy> allEnemiesListImported = new List<Enemy>();
@@ -128,7 +129,7 @@ internal class Program
             usedItem = false;
         }
 
-        Console.WriteLine($"Current difficulty: {currentDifficulty}");
+        Console.WriteLine("");
         Console.WriteLine($"A {currentEnemy.Name} appeared!");
         Console.WriteLine("");
         EnemyEncounter();
@@ -138,12 +139,17 @@ internal class Program
     {
         Console.Clear();
         Console.WriteLine($"{playerCharacter.Name} || HP: {playerCharacter.Hp}/{allCharacterListImported[originalPlayerIndex].Hp} || ATK:{playerCharacter.Atk} || SPD:{playerCharacter.Spd}");
-        Console.WriteLine("  ");
+        Console.WriteLine("");
     }
 
     private static void EnemyEncounter()
     {
         // Turn reset
+        if (!inBlock && needSpeedResetFromBlock)
+        {
+            playerCharacter.Spd -= 50;
+            needSpeedResetFromBlock = false;
+        }
         inBlock = false;
 
         bool stupidChecker = true;
@@ -281,6 +287,11 @@ internal class Program
             if (inBlock)
             {
                 damage = (int)Math.Floor(currentEnemy.Atk * 0.25);
+                if(!needSpeedResetFromBlock)
+                {
+                    playerCharacter.Spd += 50;
+                    needSpeedResetFromBlock = true;
+                }
             }
             else
             {
@@ -299,7 +310,7 @@ internal class Program
         }
         else
         {
-            Console.WriteLine(inBlock ? ("You partially blocked the attack!") : ("You got hit!"));
+            Console.WriteLine(inBlock ? ("You partially blocked the attack! \nYou predicted your enemy's next move, you have a higher chance to dodge next turn!") : ("You got hit!"));
             Console.WriteLine($"You take {damage} damage!");
         }
 
@@ -404,8 +415,7 @@ internal class Program
     private static void AttackEnemy()
     {
         RstConsole();
-        Console.WriteLine(currentEnemy.Hp);
-        Console.WriteLine(allEnemiesListImported[0].Hp);
+
         Random rnd = new Random();
         int hitMark = rnd.Next(0, 100);
 
@@ -419,7 +429,6 @@ internal class Program
             Console.WriteLine($"You attack the {currentEnemy.Name} and hit for {playerCharacter.Atk} damage!");
             currentEnemy.Hp -= playerCharacter.Atk;
         }
-        Console.WriteLine(currentEnemy.Hp);
 
         if (currentEnemy.Hp <= 0)
         {
