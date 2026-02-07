@@ -1,5 +1,4 @@
-﻿using FileIO;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -11,12 +10,15 @@ internal class Program
 {
     public static readonly string connectionString = "Server=localhost;Database=roguelike_db;User=root;";
     private static Character playerCharacter;
-    private static int playerCharacterListIndex;
+    private static int originalPlayerIndex;
     private static int currentDifficulty = 1;
     private static bool inBlock;
+    private static bool usedItem;
+    private static Enemy currentEnemy;
     private static List<Character> allCharacterListImported = new List<Character>();
     private static List<Enemy> allEnemiesListImported = new List<Enemy>();
     private static List<Weapon> allWeaponsListImported = new List<Weapon>();
+    private static int[] potionStatIncreases = new int[3] { 0, 0, 0};
     private static void Main(string[] args)
     {
         ReadFromDatabase();
@@ -30,13 +32,13 @@ internal class Program
 
         DataTable CharactersDBT = DatabaseServices.GetAllData("characters", connectionString);
         DataTable EnemiesDBT = DatabaseServices.GetAllData("enemies", connectionString);
-        DataTable ItemsDBT = DatabaseServices.GetAllData("items", connectionString);
+        DataTable ItemsDBT = DatabaseServices.GetAllData("characteritems", connectionString);
         DataTable EnemyLootPoolDBT = DatabaseServices.GetAllData("enemylootpool", connectionString);
         DataTable WeaponsDBT = DatabaseServices.GetAllData("weapons", connectionString);
 
         foreach (DataRow r in CharactersDBT.Rows)
         {
-            Character tempChar = new Character(r.Field<int>("id"), r.Field<string>("name"), r.Field<int>("hp"), r.Field<int>("atk"), r.Field<int>("spd"), Array.Empty<Item>());
+            Character tempChar = new Character(r.Field<int>("id"), r.Field<string>("name"), r.Field<int>("hp"), r.Field<int>("atk"), r.Field<int>("spd"), new List<Item>());
             allCharacterListImported.Add(tempChar);
         }
 
@@ -76,8 +78,9 @@ internal class Program
 
                 // Good
                 stupidChecker = false;
-                playerCharacterListIndex = numIn - 1;
-                playerCharacter = allCharacterListImported[playerCharacterListIndex];
+                Character tempCharacterForCloning = allCharacterListImported[numIn - 1];
+                playerCharacter = new Character(tempCharacterForCloning.Id, tempCharacterForCloning.Name, tempCharacterForCloning.Hp, tempCharacterForCloning.Atk, tempCharacterForCloning.Spd, tempCharacterForCloning.Items);
+                originalPlayerIndex = numIn - 1;
             }
             catch (Exception)
             {
@@ -91,25 +94,40 @@ internal class Program
 
     private static void EncounterEnemyRoll()
     {
+        //Enemy[] currentDifficultyEnemies = allEnemiesListImported.FindAll(x => x.Rarity == currentDifficulty).ToArray();
+        //Random rnd = new Random();
+        //currentEnemy = allEnemiesListImported[rnd.Next(0, currentDifficultyEnemies.Length - 1)];
+
+        Enemy tempEnemyForCloning = allEnemiesListImported[0];
+        currentEnemy = new Enemy(tempEnemyForCloning.Id, tempEnemyForCloning.Name, tempEnemyForCloning.Hp, tempEnemyForCloning.Atk, tempEnemyForCloning.Spd, tempEnemyForCloning.Rarity);
+
+        playerCharacter.Atk -= potionStatIncreases[1];
+        playerCharacter.Spd -= potionStatIncreases[2];
+
+        potionStatIncreases[0] = 0;
+        potionStatIncreases[1] = 0;
+        potionStatIncreases[2] = 0;
+
         RstConsole();
+        if (usedItem)
+        {
+            Console.WriteLine("Your stat increases from previously used items fade away...");
+            usedItem = false;
+        }
 
-        Enemy[] currentDifficultyEnemies = allEnemiesListImported.FindAll(x => x.Rarity == currentDifficulty).ToArray();
-        Random rnd = new Random();
-        Enemy tempEnemy = allEnemiesListImported[rnd.Next(0, currentDifficultyEnemies.Length - 1)];
-
-        Console.WriteLine($"A {tempEnemy.Name} appeared!");
+        Console.WriteLine($"A {currentEnemy.Name} appeared!");
         Console.WriteLine("");
-        EnemyEncounter(tempEnemy);
+        EnemyEncounter();
     }
 
     private static void RstConsole()
     {
         Console.Clear();
-        Console.WriteLine($"{playerCharacter.Name} || HP: {playerCharacter.Hp}/{allCharacterListImported[playerCharacterListIndex].Hp} || ATK:{playerCharacter.Atk} || SPD:{playerCharacter.Atk}");
+        Console.WriteLine($"{playerCharacter.Name} || HP: {playerCharacter.Hp}/{allCharacterListImported[originalPlayerIndex].Hp} || ATK:{playerCharacter.Atk} || SPD:{playerCharacter.Atk}");
         Console.WriteLine("  ");
     }
 
-    private static void EnemyEncounter(Enemy currectEnemy)
+    private static void EnemyEncounter()
     {
         // Turn reset
         inBlock = false;
@@ -118,7 +136,7 @@ internal class Program
         while (stupidChecker)
         {
             // Action log
-            Console.WriteLine($"The {currectEnemy.Name} stands idly");
+            Console.WriteLine($"The {currentEnemy.Name} stands idly");
             Console.WriteLine("What would you like to do?");
             Console.WriteLine($"\t[1] Attack");
             Console.WriteLine($"\t[2] Use an item");
@@ -128,9 +146,6 @@ internal class Program
             try
             {
                 int battleInputInt = Convert.ToInt32(Console.ReadLine());
-
-                // Good
-                stupidChecker = false;
 
                 // Battle Input
                 switch (battleInputInt)
@@ -143,69 +158,184 @@ internal class Program
                         break;
                     case 3:
                         inBlock = true;
+                        EnemyTurn();
                         break;
+                    default:
+                        throw (new Exception("RangeError"));
                 }
-
-                if (currectEnemy.Hp <= 0)
-                {
-                    Console.WriteLine($"The {currectEnemy.Name} died!");
-                    RollEnemyLootPool(currectEnemy);
-                }
-
-                EnemyTurn(currectEnemy);
             }
             catch (Exception)
             {
-                Console.Clear();
+                RstConsole();
                 Console.WriteLine("Incorrect input!");
             }
         }
     }
 
-    private static void RollEnemyLootPool(Enemy currectEnemy)
+    private static void RollEnemyLootPool()
     {
-        Console.WriteLine($"You search the {currectEnemy.Name}'s corpse for loot...");
-        Console.WriteLine($"You get a potion!");
+        Console.WriteLine(" ---- ");
+        Console.WriteLine($"You search the {currentEnemy.Name}'s corpse for loot...");
+        Console.WriteLine($"You get a Potion of Strength!");
+        playerCharacter.Items.Add(new Item(1, "Potion of Strength", "Atk", 5));
+        WaitForInput();
+        RstConsole();
+        currentDifficulty++;
+        EncounterEnemyRoll();
     }
 
-    private static void EnemyTurn(Enemy currentEnemy)
+    private static void EnemyTurn()
     {
-        RstConsole();
-        Console.WriteLine($"The {currentEnemy.Name} attacks!");
-        if (inBlock)
+        int damage = 0;
+        bool dodged = false;
+        Random rnd = new Random();
+        int hitMark = rnd.Next(0, 100);
+
+        if (hitMark <= playerCharacter.Spd)
         {
-            Console.WriteLine("You partially blocked the attack!");
-            int damage = (int)Math.Floor(currentEnemy.Atk * 0.25);
-            Console.WriteLine($"You take {damage} damage!");
+            dodged = true;
         }
         else
         {
-            Console.WriteLine("You got hit!");
-            playerCharacter.Hp -= currentEnemy.Atk;
-            Console.WriteLine($"You take {currentEnemy.Atk} damage!");
+            if (inBlock)
+            {
+                damage = (int)Math.Floor(currentEnemy.Atk * 0.25);
+            }
+            else
+            {
+                damage = currentEnemy.Atk;
+            }
+            playerCharacter.Hp -= damage;
         }
+
+        // Writing
+        RstConsole();
+        Console.WriteLine($"The {currentEnemy.Name} attacks!");
+
+        if (dodged)
+        {
+            Console.WriteLine("You dodged the attack!");
+        }
+        else
+        {
+            Console.WriteLine(inBlock ? ("You partially blocked the attack!") : ("You got hit!"));
+            Console.WriteLine($"You take {damage} damage!");
+        }
+
+        WaitForInput();
+        RstConsole();
+        EnemyEncounter();
+    }
+
+    private static void WaitForInput()
+    {
+        Console.WriteLine("Press enter to continute");
+        Console.ReadLine();
     }
 
     private static void ItemMenu()
     {
         RstConsole();
 
-        Console.WriteLine("Your items:");
-        if (playerCharacter.Items.Length == 0)
+        bool stupidInputChecker = true;
+        while (stupidInputChecker)
         {
-            Console.WriteLine("\tYou have no items!");
-        }
-        else 
-        { 
-            foreach (var item in playerCharacter.Items)
+            try
             {
-                Console.WriteLine($"\t{item}");
+                Console.WriteLine("Your items:");
+                if (playerCharacter.Items.Count == 0)
+                {
+                    Console.WriteLine("\tYou have no items!");
+                    WaitForInput();
+                    RstConsole();
+                    EnemyEncounter();
+                }
+                else
+                {
+                    foreach (var item in playerCharacter.Items)
+                    {
+                        Console.WriteLine($"\t{item.Name} - {item} - {item.Stat} - {item.ValueIncrease}");
+                    }
+                    Console.WriteLine("");
+                }
+
+                Console.WriteLine($"Choose an item to use from 1 to {playerCharacter.Items.Count} \nInput 0 to Cancel");
+
+                int itemInputInt = Convert.ToInt32(Console.ReadLine());
+                if (itemInputInt == 0)
+                {
+                    RstConsole();
+                    EnemyEncounter();
+                }
+
+                Item chosenItem = playerCharacter.Items[itemInputInt - 1];
+                usedItem = true;
+                switch (chosenItem.Stat)
+                {
+                    case "Hp":
+                        playerCharacter.Hp += chosenItem.ValueIncrease;
+                        Console.WriteLine($"You used {chosenItem.Name} and restored {chosenItem.ValueIncrease} HP!");
+                        potionStatIncreases[0] += chosenItem.ValueIncrease;
+                        break;
+                    case "Atk":
+                        playerCharacter.Atk += chosenItem.ValueIncrease;
+                        Console.WriteLine($"You used {chosenItem.Name} and increased your ATK by {chosenItem.ValueIncrease}!");
+                        potionStatIncreases[1] += chosenItem.ValueIncrease;
+                        break;
+                    case "Spd":
+                        playerCharacter.Spd += chosenItem.ValueIncrease;
+                        Console.WriteLine($"You used {chosenItem.Name} and increased your SPD by {chosenItem.ValueIncrease}!");
+                        potionStatIncreases[3] += chosenItem.ValueIncrease;
+                        break;
+                    default:
+                        throw (new Exception("No Such Stat"));
+                }
+
+                playerCharacter.Items.Remove(chosenItem);
+                playerCharacter.Items.Sort((x, y) => x.Id.CompareTo(y.Id));
+
+                //Good
+                stupidInputChecker = false;
+                WaitForInput();
+                RstConsole();
+                EnemyTurn();
+            }
+            catch (Exception)
+            {
+                RstConsole();
+                Console.WriteLine("Incorrect input!");
             }
         }
     }
 
     private static void AttackEnemy()
     {
-        
+        RstConsole();
+        Console.WriteLine(currentEnemy.Hp);
+        Console.WriteLine(allEnemiesListImported[0].Hp);
+        Random rnd = new Random();
+        int hitMark = rnd.Next(0, 100);
+
+        if (hitMark <= currentEnemy.Spd)
+        {
+            // Missed
+            Console.WriteLine($"You attack the {currentEnemy.Name} but miss!");
+        }
+        else
+        {
+            Console.WriteLine($"You attack the {currentEnemy.Name} and hit for {playerCharacter.Atk} damage!");
+            currentEnemy.Hp -= playerCharacter.Atk;
+        }
+        Console.WriteLine(currentEnemy.Hp);
+
+        if (currentEnemy.Hp <= 0)
+        {
+            Console.WriteLine($"The {currentEnemy.Name} died!");
+            RollEnemyLootPool();
+        }
+
+        WaitForInput();
+        RstConsole();
+        EnemyTurn();
     }
 }

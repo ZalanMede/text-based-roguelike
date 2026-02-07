@@ -20,10 +20,10 @@ namespace text_based_roguelike.Model
 
         public Item(int id, string name, string stat, int valueIncrease)
         {
-            this.id = id;
-            this.name = name;
-            this.stat = stat;
-            this.valueIncrease = valueIncrease;
+            Id = id;
+            Name = name;
+            Stat = stat;
+            ValueIncrease = valueIncrease;
         }
     }
 }

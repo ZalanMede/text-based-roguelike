@@ -12,10 +12,4 @@
     <PackageReference Include="MySqlConnector" Version="2.5.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="FileIO">
-      <HintPath>H:\Code\CSharp DLLs\FileIO.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>

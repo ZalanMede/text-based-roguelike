@@ -13,8 +13,8 @@ namespace text_based_roguelike.Model
         public int Hp {  get; set; }
         public int Atk { get; set; }
         public int Spd { get; set; }
-        public Item[] Items { get; set; }
-        public Character(int id, string name, int hp, int atk, int spd, Item[] items)
+        public List<Item> Items { get; set; }
+        public Character(int id, string name, int hp, int atk, int spd, List<Item> items)
         {
             Id = id;
             Name = name;
@@ -29,7 +29,7 @@ namespace text_based_roguelike.Model
         private int hp { get; set; }
         private int atk { get; set; }
         private int spd { get; set; }
-        private Item[] items { get; set; }
+        private List<Item> items { get; set; }
 
         public override string ToString()
         {
