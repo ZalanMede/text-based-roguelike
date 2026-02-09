@@ -25,5 +25,10 @@ namespace text_based_roguelike.Model
             Stat = stat;
             ValueIncrease = valueIncrease;
         }
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

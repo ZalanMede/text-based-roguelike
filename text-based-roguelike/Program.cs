@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FileIO;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -201,6 +202,9 @@ internal class Program
             Console.WriteLine("\tYOU WIN!!!!");
             Console.WriteLine("");
             Console.WriteLine("-------------------------");
+
+            WinOrLoss(true);
+
             WaitForInput();
             Environment.Exit(0);
         }
@@ -217,13 +221,13 @@ internal class Program
                 Item gottenItem = allItemsListImported.Find(x => x.Id == gottenItemId);
                 playerCharacter.Items.Add(gottenItem);
                 playerCharacter.Items.Sort((x, y) => x.Id.CompareTo(y.Id));
-                Console.WriteLine($"You found a {gottenItem.Name}!");
+                Console.WriteLine($"You found a {gottenItem.ToString()}!");
             }
             else
             {
                 Weapon gottenWeapon = allWeaponsListImported.Find(x => x.Id == gottenItemId);
                 playerCharacter.Atk += gottenWeapon.Atk;
-                Console.WriteLine($"You found a {gottenWeapon.Name} and equip it, increasing your ATK by {gottenWeapon.Atk}!");
+                Console.WriteLine($"You found a {gottenWeapon.ToString()} and equip it, increasing your ATK by {gottenWeapon.Atk}!");
             }
         }
         else
@@ -246,6 +250,44 @@ internal class Program
         }
 
         EncounterEnemyRoll();
+    }
+
+    private static void WinOrLoss(bool winBool)
+    {
+        List<string> writtenItems = new List<string>();
+
+        writtenItems.Add(winBool ? "Sucessful run!" : "Run FAILED!");
+        writtenItems.Add(" //// ");
+        writtenItems.Add("Character stats:");
+        writtenItems.Add(playerCharacter.Name);
+        writtenItems.Add(winBool ? $"\tRemaining HP: {playerCharacter.Hp}" : $"\tStarting HP: {allCharacterListImported[originalPlayerIndex].Hp}");
+        writtenItems.Add($"\tATK: { playerCharacter.Atk}");
+        writtenItems.Add($"\tSPD: { playerCharacter.Spd}");
+
+        writtenItems.Add($"Item List:");
+        foreach (var item in playerCharacter.Items)
+        {
+            writtenItems.Add($"\t{item.Name}");
+        }
+
+        writtenItems.Add($"  ");
+        writtenItems.Add($" ---------- ");
+        writtenItems.Add($"  ");
+
+        SaveRunInFile(writtenItems);
+    }
+
+    private static void SaveRunInFile(List<string> writtenItems)
+    {
+        try
+        {
+            FileIO.WriteToFile writer = new FileIO.WriteToFile();
+            writer.FileWrite("Past_Runs.txt", writtenItems);
+        }
+        catch (IOException)
+        {
+            Console.WriteLine("Failed to write to file :c");
+        }
     }
 
     private static int RollForItemId()
@@ -321,6 +363,9 @@ internal class Program
             Console.WriteLine("\tYOU DIED!");
             Console.WriteLine("");
             Console.WriteLine("-------------------------");
+
+            WinOrLoss(false);
+
             WaitForInput();
             Environment.Exit(0);
         }
