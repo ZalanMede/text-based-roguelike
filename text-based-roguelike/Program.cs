@@ -404,7 +404,7 @@ internal class Program
                 {
                     for (int i = 0; i < playerCharacter.Items.Count; i++)
                     {
-                        Console.WriteLine($"\t[{i}]  {playerCharacter.Items[i].Name}");
+                        Console.WriteLine($"\t[{i+1}]  {playerCharacter.Items[i].Name}");
                     }
 
                     Console.WriteLine("");
