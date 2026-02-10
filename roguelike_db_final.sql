@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 07, 2026 at 06:51 PM
+-- Generation Time: Feb 10, 2026 at 08:04 PM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.0.30
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -40,11 +40,11 @@ CREATE TABLE `characters` (
 --
 
 INSERT INTO `characters` (`id`, `name`, `hp`, `atk`, `spd`) VALUES
-(1, 'Hero', 100, 15, 15),
-(2, 'Stranger', 62, 42, 26),
+(1, 'Hero', 120, 14, 15),
+(2, 'Stranger', 72, 22, 36),
 (3, 'Traveler', 101, 6, 23),
-(4, 'Rogue', 57, 29, 44),
-(5, 'Wizard', 65, 52, 13);
+(4, 'Rogue', 50, 24, 44),
+(5, 'Wizard', 48, 48, 4);
 
 -- --------------------------------------------------------
 
@@ -66,21 +66,21 @@ CREATE TABLE `enemies` (
 --
 
 INSERT INTO `enemies` (`id`, `name`, `hp`, `atk`, `spd`, `rarity`) VALUES
-(1, 'Slime', 5, 7, 4, 1),
-(2, 'Goblin', 8, 7, 6, 1),
-(3, 'Ork', 10, 9, 7, 1),
-(4, 'Giant Spider', 13, 16, 10, 2),
-(5, 'Ogre', 16, 15, 11, 2),
-(6, 'Ice Golem', 13, 18, 16, 2),
-(7, 'Evil Druid', 21, 20, 22, 3),
+(1, 'Slime', 6, 7, 4, 1),
+(2, 'Goblin', 12, 7, 6, 1),
+(3, 'Ork', 15, 9, 7, 1),
+(4, 'Giant Spider', 18, 16, 10, 2),
+(5, 'Ogre', 21, 15, 11, 2),
+(6, 'Ice Golem', 27, 18, 2, 2),
+(7, 'Evil Druid', 23, 20, 25, 3),
 (8, 'Giant Bat', 20, 22, 30, 3),
 (9, 'Wind elemental', 29, 23, 21, 3),
 (10, 'Centaur', 36, 36, 31, 4),
 (11, 'Chimera', 37, 33, 31, 4),
 (12, 'Dream Demon', 30, 35, 38, 4),
-(13, 'Fire Dragon', 45, 45, 40, 5),
-(14, 'Ice Dragon', 42, 42, 46, 5),
-(15, 'Vampire Baron', 41, 46, 41, 5);
+(13, 'Fire Dragon', 45, 45, 42, 5),
+(14, 'Ice Dragon', 47, 42, 46, 5),
+(15, 'Vampire Baron', 42, 46, 41, 5);
 
 -- --------------------------------------------------------
 
@@ -176,14 +176,14 @@ CREATE TABLE `items` (
 
 INSERT INTO `items` (`id`, `name`, `stat`, `inc`) VALUES
 (1, 'Strength Potion', 'atk', 20),
-(2, 'Health Potion', 'hp', 15),
+(2, 'Health Potion', 'hp', 20),
 (3, 'Speed Potion', 'spd', 20),
 (4, 'Unknown Potion', 'atk', 30),
 (5, 'Unknown Potion', 'atk', -20),
-(6, 'Gladiator helmet', 'hp', 10),
-(7, 'Adventurer Boots', 'spd', 15),
-(8, 'Beef Steak', 'hp', 30),
-(9, 'Scruffy Adventurer Boots', 'spd', 10),
+(6, 'Glowing Herbs', 'hp', 15),
+(7, 'Bear Tartare', 'spd', 15),
+(8, 'Beef Steak', 'hp', 50),
+(9, 'Strange Mushroom', 'spd', 20),
 (10, 'Unknown Potion', 'hp', -10);
 
 -- --------------------------------------------------------

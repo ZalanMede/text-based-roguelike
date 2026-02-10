@@ -1,5 +1,4 @@
-﻿using FileIO;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -197,11 +196,13 @@ internal class Program
     {
         if (currentDifficulty > 5)
         {
+            Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("-------------------------");
             Console.WriteLine("");
             Console.WriteLine("\tYOU WIN!!!!");
             Console.WriteLine("");
             Console.WriteLine("-------------------------");
+            Console.ResetColor();
 
             WinOrLoss(true);
 
@@ -281,8 +282,7 @@ internal class Program
     {
         try
         {
-            FileIO.WriteToFile writer = new FileIO.WriteToFile();
-            writer.FileWrite("Past_Runs.txt", writtenItems);
+            FileIO.WriteToFile("Past_Runs.txt", writtenItems, true);
         }
         catch (IOException)
         {
@@ -358,11 +358,13 @@ internal class Program
 
         if(playerCharacter.Hp <= 0)
         {
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("-------------------------");
             Console.WriteLine("");
             Console.WriteLine("\tYOU DIED!");
             Console.WriteLine("");
             Console.WriteLine("-------------------------");
+            Console.ResetColor();
 
             WinOrLoss(false);
 
@@ -400,10 +402,11 @@ internal class Program
                 }
                 else
                 {
-                    foreach (var item in playerCharacter.Items)
+                    for (int i = 0; i < playerCharacter.Items.Count; i++)
                     {
-                        Console.WriteLine($"\t{item.Name}");
+                        Console.WriteLine($"\t[{i}]  {playerCharacter.Items[i].Name}");
                     }
+
                     Console.WriteLine("");
                 }
 
@@ -452,7 +455,6 @@ internal class Program
             {
                 RstConsole();
                 Console.WriteLine("Incorrect input!");
-                Console.WriteLine(ex);
             }
         }
     }
