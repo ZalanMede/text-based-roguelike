@@ -34,6 +34,9 @@ internal class Program
         Console.WriteLine("DB olvasás:");
         DatabaseServices.DBConnectionCheck(connectionString);
 
+        WaitForInput();
+        Console.Clear();
+
         DataTable CharactersDBT = DatabaseServices.GetAllData("characters", connectionString);
         DataTable EnemiesDBT = DatabaseServices.GetAllData("enemies", connectionString);
         DataTable ItemsDBT = DatabaseServices.GetAllData("items", connectionString);
@@ -77,12 +80,13 @@ internal class Program
         bool stupidChecker = true;
         while (stupidChecker)
         {
-            Console.WriteLine("Start Game: ");
+            Console.WriteLine("Enter the dungeon with... : ");
             foreach (var item in allCharacterListImported)
             {
                 Console.WriteLine($"{item}");
             }
 
+            Console.WriteLine("");
             Console.WriteLine($"Choose a character from 1 to {allCharacterListImported.Count}: ");
             try
             {
@@ -420,7 +424,6 @@ internal class Program
                 }
 
                 Item chosenItem = playerCharacter.Items[itemInputInt - 1];
-                usedItem = true;
                 switch (chosenItem.Stat)
                 {
                     case "hp":
@@ -432,11 +435,13 @@ internal class Program
                         playerCharacter.Atk += chosenItem.ValueIncrease;
                         Console.WriteLine($"You used {chosenItem.Name} and increased your ATK by {chosenItem.ValueIncrease}!");
                         potionStatIncreases[1] += chosenItem.ValueIncrease;
+                        usedItem = true;
                         break;
                     case "spd":
                         playerCharacter.Spd += chosenItem.ValueIncrease;
                         Console.WriteLine($"You used {chosenItem.Name} and increased your SPD by {chosenItem.ValueIncrease}!");
                         potionStatIncreases[2] += chosenItem.ValueIncrease;
+                        usedItem = true;
                         break;
                     default:
                         throw (new Exception("No Such Stat"));
